@@ -1,0 +1,33 @@
+# Build output
+build/bin/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/wailsjs/
+node_modules/
+
+# Go
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Database (local user data)
+*.db
+*.db-shm
+*.db-wal
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Env
+.env
+.env.local

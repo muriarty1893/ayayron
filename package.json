@@ -1,0 +1,9 @@
+{
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "react-hook-form": "7.53",
+    "zod": "^3.25.76"
+  }
+}
