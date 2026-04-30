@@ -2,6 +2,12 @@
 
 A desktop job application tracker built with Wails v2, Go, and React. Track your job applications through the hiring pipeline with a dashboard, filterable table, and drag-and-drop Kanban board.
 
+## Screenshots
+
+| Dashboard | Applications | Kanban |
+|-----------|-------------|--------|
+| ![Dashboard](img/Screenshot%20from%202026-04-30%2016-59-24.png) | ![Applications](img/Screenshot%20from%202026-04-30%2016-59-36.png) | ![Kanban](img/Screenshot%20from%202026-04-30%2016-59-45.png) |
+
 ## Features
 
 - **Dashboard** — stats overview, status distribution chart, applications over time, recent activity
