@@ -5,7 +5,6 @@
 | Platform | Requirement |
 |----------|-------------|
 | Linux    | WebKit2GTK 4.0 or 4.1 (`libwebkit2gtk-4.1-0`) |
-| macOS    | macOS 10.13+ (WebKit built-in) |
 | Windows  | Windows 10+ with WebView2 runtime |
 
 ## Development Requirements
@@ -35,8 +34,8 @@ sudo ln -s /usr/lib/x86_64-linux-gnu/pkgconfig/webkit2gtk-4.1.pc \
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `github.com/wailsapp/wails/v2` | v2.12.0 | Desktop app framework |
-| `gorm.io/gorm` | v1.31.1 | ORM |
+| `github.com/wailsapp/wails/v2` | v2.12.0 | Desktop app framework + event streaming |
+| `gorm.io/gorm` | v1.31.1 | ORM for installation history |
 | `github.com/glebarez/sqlite` | v1.11.0 | Pure-Go SQLite driver (no CGO) |
 
 ## Frontend Dependencies
@@ -45,15 +44,12 @@ sudo ln -s /usr/lib/x86_64-linux-gnu/pkgconfig/webkit2gtk-4.1.pc \
 |---------|---------|---------|
 | `react` | 18 | UI framework |
 | `typescript` | 5 | Type safety |
-| `@tremor/react` | 3 | Dashboard UI components + charts |
+| `@tremor/react` | 3 | UI components (ProgressBar, Table) |
 | `tailwindcss` | 3 | Utility CSS |
-| `@tanstack/react-query` | 5 | Server state management |
-| `react-hook-form` | 7.53 | Form handling |
-| `zod` | 3 | Schema validation |
-| `react-router-dom` | 7 | Client-side routing (HashRouter) |
-| `@dnd-kit/core` + `sortable` | 6/10 | Drag and drop (Kanban) |
+| `@tanstack/react-query` | 5 | Server state + query invalidation after install |
+| `react-router-dom` | 7 | HashRouter (required for Wails file:// protocol) |
 | `@heroicons/react` | 2 | Icon set |
-| `date-fns` | 3 | Date formatting |
+| `date-fns` | 3 | Relative date formatting in history |
 
 ## Verify Setup
 
