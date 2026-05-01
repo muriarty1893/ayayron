@@ -1,40 +1,33 @@
+import { ClockIcon, WrenchScrewdriverIcon } from "@heroicons/react/24/outline";
 import { NavLink } from "react-router-dom";
-import {
-  HomeIcon,
-  TableCellsIcon,
-  ViewColumnsIcon,
-} from "@heroicons/react/24/outline";
 
 const nav = [
-  { to: "/", label: "Dashboard", Icon: HomeIcon },
-  { to: "/applications", label: "Applications", Icon: TableCellsIcon },
-  { to: "/kanban", label: "Kanban", Icon: ViewColumnsIcon },
+  { to: "/", label: "Setup Wizard", Icon: WrenchScrewdriverIcon },
+  { to: "/history", label: "History", Icon: ClockIcon },
 ];
 
 export function Sidebar() {
   return (
-    <aside className="flex flex-col w-56 bg-gray-900 border-r border-gray-800 h-screen sticky top-0">
-      <div className="px-6 py-5 border-b border-gray-800">
-        <span className="text-xl font-bold tracking-tight text-white">
-          ayayron
-        </span>
-        <p className="text-xs text-gray-500 mt-0.5">Job Tracker</p>
+    <aside className="sticky top-0 flex h-screen w-56 flex-col border-r border-gray-800 bg-gray-900">
+      <div className="border-b border-gray-800 px-6 py-5">
+        <span className="text-xl font-bold tracking-tight text-white">ayayron</span>
+        <p className="mt-0.5 text-xs text-gray-500">Dev Setup</p>
       </div>
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 space-y-1 px-3 py-4">
         {nav.map(({ to, label, Icon }) => (
           <NavLink
             key={to}
             to={to}
             end={to === "/"}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 isActive
                   ? "bg-indigo-600 text-white"
                   : "text-gray-400 hover:bg-gray-800 hover:text-white"
               }`
             }
           >
-            <Icon className="w-4 h-4" />
+            <Icon className="h-4 w-4" />
             {label}
           </NavLink>
         ))}

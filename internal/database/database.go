@@ -24,7 +24,7 @@ func Init() (*gorm.DB, error) {
 		return nil, err
 	}
 
-	if err := db.AutoMigrate(&models.JobApplication{}); err != nil {
+	if err := db.AutoMigrate(&models.Installation{}); err != nil {
 		return nil, err
 	}
 

@@ -1,22 +1,26 @@
-import { BriefcaseIcon } from "@heroicons/react/24/outline";
+import { InboxIcon } from "@heroicons/react/24/outline";
 
 interface EmptyStateProps {
-  message?: string;
+  title?: string;
+  description?: string;
   action?: { label: string; onClick: () => void };
 }
 
 export function EmptyState({
-  message = "No applications yet",
+  title = "Nothing here yet",
+  description,
   action,
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <BriefcaseIcon className="w-12 h-12 text-gray-600 mb-4" />
-      <p className="text-gray-400 text-sm">{message}</p>
+      <InboxIcon className="mb-4 h-12 w-12 text-gray-600" />
+      <p className="text-sm font-medium text-gray-300">{title}</p>
+      {description && <p className="mt-1 text-xs text-gray-500">{description}</p>}
       {action && (
         <button
+          type="button"
           onClick={action.onClick}
-          className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors"
+          className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-500"
         >
           {action.label}
         </button>

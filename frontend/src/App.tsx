@@ -1,9 +1,8 @@
-import { HashRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppShell } from "./components/layout/AppShell";
-import { DashboardPage } from "./pages/DashboardPage";
-import { ApplicationsPage } from "./pages/ApplicationsPage";
-import { KanbanPage } from "./pages/KanbanPage";
+import { HistoryPage } from "./pages/HistoryPage";
+import { WizardPage } from "./pages/WizardPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,9 +16,8 @@ export default function App() {
       <HashRouter>
         <Routes>
           <Route element={<AppShell />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="applications" element={<ApplicationsPage />} />
-            <Route path="kanban" element={<KanbanPage />} />
+            <Route index element={<WizardPage />} />
+            <Route path="history" element={<HistoryPage />} />
           </Route>
         </Routes>
       </HashRouter>
