@@ -58,20 +58,26 @@ A cross-platform desktop GUI for the [setup-dev-environment](https://github.com/
 
 ## Getting Started
 
+### 1. Install build dependencies (one-time)
+
+**Linux / macOS:**
 ```bash
-# Install frontend dependencies
-cd frontend && npm install && cd ..
+bash setup.sh
+source ~/.profile   # reload PATH if needed
+```
 
-# Run in development mode (hot reload)
-wails dev
+**Windows** (PowerShell as Administrator):
+```powershell
+powershell -ExecutionPolicy Bypass -File setup.ps1
+```
 
-# Build for current platform
-wails build
+The script installs Go 1.22, Node.js 20, Wails CLI, and on Linux the required GTK/WebKit system libraries.
 
-# Build for a specific platform
-wails build -platform linux/amd64 -tags webkit2_4_1
-wails build -platform darwin/universal
-wails build -platform windows/amd64
+### 2. Run or build
+
+```bash
+wails dev        # development mode with hot reload
+wails build      # production binary → build/bin/ayayron
 ```
 
 Output binary: `build/bin/ayayron`
