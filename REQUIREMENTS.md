@@ -5,6 +5,7 @@
 | Platform | Requirement |
 |----------|-------------|
 | Linux    | WebKit2GTK 4.0 or 4.1 (`libwebkit2gtk-4.1-0`) |
+| macOS    | macOS 10.13 (High Sierra) or newer |
 | Windows  | Windows 10+ with WebView2 runtime |
 
 ## Development Requirements
@@ -30,11 +31,24 @@ sudo ln -s /usr/lib/x86_64-linux-gnu/pkgconfig/webkit2gtk-4.1.pc \
            /usr/lib/x86_64-linux-gnu/pkgconfig/webkit2gtk-4.0.pc
 ```
 
+### macOS only
+
+Xcode Command Line Tools are required (prompted automatically on first build):
+
+```bash
+xcode-select --install
+```
+
+### Windows only
+
+Install the WebView2 runtime if not already present (ships with Windows 11 by default):  
+https://developer.microsoft.com/en-us/microsoft-edge/webview2/
+
 ## Go Dependencies
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| `github.com/wailsapp/wails/v2` | v2.12.0 | Desktop app framework + event streaming |
+| `github.com/wailsapp/wails/v2` | v2.12.0 | Desktop app framework + JS bindings + event streaming |
 | `gorm.io/gorm` | v1.31.1 | ORM for installation history |
 | `github.com/glebarez/sqlite` | v1.11.0 | Pure-Go SQLite driver (no CGO) |
 
@@ -44,10 +58,9 @@ sudo ln -s /usr/lib/x86_64-linux-gnu/pkgconfig/webkit2gtk-4.1.pc \
 |---------|---------|---------|
 | `react` | 18 | UI framework |
 | `typescript` | 5 | Type safety |
-| `@tremor/react` | 3 | UI components (ProgressBar, Table) |
 | `tailwindcss` | 3 | Utility CSS |
 | `@tanstack/react-query` | 5 | Server state + query invalidation after install |
-| `react-router-dom` | 7 | HashRouter (required for Wails file:// protocol) |
+| `react-router-dom` | 7 | HashRouter (required for Wails `file://` protocol) |
 | `@heroicons/react` | 2 | Icon set |
 | `date-fns` | 3 | Relative date formatting in history |
 
@@ -58,3 +71,18 @@ wails doctor
 ```
 
 This command checks all dependencies and reports what is missing.
+
+## Bundled Scripts
+
+The installer scripts are embedded directly into the binary at build time via `go:embed`. No external files need to be distributed alongside the application.
+
+Scripts bundled in `internal/scripts/files/`:
+
+| File | Platform | Purpose |
+|------|----------|---------|
+| `ubuntu.sh` | Linux | bash installer using apt-get, snap, and curl |
+| `ubuntu.config` | Linux | default tool selections |
+| `macos.sh` | macOS | bash installer using Homebrew |
+| `macos.config` | macOS | default tool selections |
+| `windows.ps1` | Windows | PowerShell installer using winget and Scoop |
+| `windows.config` | Windows | default tool selections |
