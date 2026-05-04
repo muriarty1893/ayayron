@@ -1,3 +1,18 @@
+export interface Prerequisite {
+  id: string;
+  name: string;
+  description: string;
+  isInstalled: boolean;
+  required: boolean;
+  installNote: string;
+}
+
+export interface PrereqDoneEvent {
+  id: string;
+  success: boolean;
+  error?: string;
+}
+
 export type Category =
   | "core"
   | "languages"

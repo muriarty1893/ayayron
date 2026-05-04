@@ -393,3 +393,163 @@ func (a *App) CancelInstallation() error {
 func (a *App) GetInstallationHistory(limit int) ([]models.Installation, error) {
 	return a.installRepo.List(limit)
 }
+
+// CheckPrerequisites returns the platform-specific prerequisites the installer scripts need,
+// with IsInstalled populated by running a detection command for each.
+func (a *App) CheckPrerequisites() []models.Prerequisite {
+	platform := a.GetPlatform()
+	defs := platformPrereqs(platform)
+	result := make([]models.Prerequisite, len(defs))
+	for i, p := range defs {
+		p.IsInstalled = detectPrereq(p.ID, platform)
+		result[i] = p
+	}
+	return result
+}
+
+// InstallPrerequisite runs the install command for the given prereq ID asynchronously,
+// emitting install:line events for output and prereq:done when finished.
+func (a *App) InstallPrerequisite(id string) error {
+	platform := a.GetPlatform()
+	cmd, err := prereqInstallCmd(id, platform)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		stdout, _ := cmd.StdoutPipe()
+		stderr, _ := cmd.StderrPipe()
+		if startErr := cmd.Start(); startErr != nil {
+			wailsruntime.EventsEmit(a.ctx, "prereq:done", map[string]interface{}{
+				"id": id, "success": false, "error": startErr.Error(),
+			})
+			return
+		}
+
+		var wg sync.WaitGroup
+		stream := func(r io.ReadCloser, isStderr bool) {
+			defer wg.Done()
+			sc := bufio.NewScanner(r)
+			for sc.Scan() {
+				line := ansiRe.ReplaceAllString(sc.Text(), "")
+				wailsruntime.EventsEmit(a.ctx, "install:line", map[string]interface{}{
+					"toolId": id, "line": line, "isStderr": isStderr,
+				})
+			}
+		}
+		wg.Add(2)
+		go stream(stdout, false)
+		go stream(stderr, true)
+		wg.Wait()
+
+		waitErr := cmd.Wait()
+		success := waitErr == nil
+		// Re-check detection after install for accurate result.
+		if success {
+			success = detectPrereq(id, platform)
+		}
+		wailsruntime.EventsEmit(a.ctx, "prereq:done", map[string]interface{}{
+			"id": id, "success": success,
+		})
+	}()
+
+	return nil
+}
+
+// platformPrereqs returns the prerequisite definitions for the given platform.
+func platformPrereqs(platform string) []models.Prerequisite {
+	switch platform {
+	case "darwin":
+		return []models.Prerequisite{
+			{
+				ID:          "xcode-cli",
+				Name:        "Xcode Command Line Tools",
+				Description: "Required by Homebrew and most compilers on macOS.",
+				Required:    true,
+				InstallNote: "A system dialog will appear — click Install and wait for it to finish.",
+			},
+			{
+				ID:          "homebrew",
+				Name:        "Homebrew",
+				Description: "The package manager the macOS installer script uses for every tool.",
+				Required:    true,
+				InstallNote: "Downloads and installs Homebrew (~100 MB). May take a few minutes.",
+			},
+		}
+	case "linux":
+		return []models.Prerequisite{
+			{
+				ID:          "curl",
+				Name:        "curl",
+				Description: "Used by the script to download NVM, Rust, pnpm, Starship, and more.",
+				Required:    true,
+				InstallNote: "Runs: sudo apt-get install -y curl",
+			},
+			{
+				ID:          "sudo",
+				Name:        "sudo access",
+				Description: "Required to install system packages via apt-get.",
+				Required:    true,
+				InstallNote: "Your account must have sudo privileges. Contact your system administrator if missing.",
+			},
+		}
+	case "windows":
+		return []models.Prerequisite{
+			{
+				ID:          "scoop",
+				Name:        "Scoop",
+				Description: "The user-level package manager the Windows installer script uses.",
+				Required:    true,
+				InstallNote: "Installs Scoop without requiring admin rights.",
+			},
+		}
+	}
+	return nil
+}
+
+// detectPrereq checks whether a given prerequisite is already present.
+func detectPrereq(id, platform string) bool {
+	switch id {
+	case "xcode-cli":
+		return exec.Command("xcode-select", "-p").Run() == nil //nolint:gosec
+	case "homebrew":
+		_, err := exec.LookPath("brew")
+		return err == nil
+	case "curl":
+		_, err := exec.LookPath("curl")
+		return err == nil
+	case "sudo":
+		// Check that the current user can run sudo without a password for basic commands,
+		// or at least that sudo exists. We just verify the binary is present; actual
+		// privilege check happens when the script runs.
+		_, err := exec.LookPath("sudo")
+		return err == nil
+	case "scoop":
+		cmd := exec.Command("powershell", "-Command", "scoop --version") //nolint:gosec
+		return cmd.Run() == nil
+	}
+	return false
+}
+
+// prereqInstallCmd returns an exec.Cmd that installs the given prerequisite.
+func prereqInstallCmd(id, platform string) (*exec.Cmd, error) {
+	switch id {
+	case "xcode-cli":
+		// xcode-select --install opens a system GUI dialog; we can't stream it.
+		// Emit output manually then rely on prereq:done re-check.
+		return exec.Command("xcode-select", "--install"), nil //nolint:gosec
+	case "homebrew":
+		script := `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+		cmd := exec.Command("bash", "-c", script) //nolint:gosec
+		cmd.Env = append(os.Environ(), "NONINTERACTIVE=1")
+		return cmd, nil
+	case "curl":
+		if platform == "linux" {
+			return exec.Command("pkexec", "apt-get", "install", "-y", "curl"), nil //nolint:gosec
+		}
+	case "scoop":
+		ps := `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser; Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression`
+		return exec.Command("powershell", "-ExecutionPolicy", "Bypass", "-Command", ps), nil //nolint:gosec
+	}
+	return nil, fmt.Errorf("no install command for prereq %q on %s", id, platform)
+}

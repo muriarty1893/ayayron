@@ -1,9 +1,11 @@
 import {
   CancelInstallation,
+  CheckPrerequisites,
   GetInstallationHistory,
   GetPlatform,
   GetProfiles,
   GetTools,
+  InstallPrerequisite,
   StartInstallation,
 } from "../../wailsjs/go/main/App";
 import type { Installation, Profile, Tool } from "../types/tool";
@@ -33,4 +35,13 @@ export async function cancelInstallation(): Promise<void> {
 export async function getInstallationHistory(limit: number): Promise<Installation[]> {
   const result = await GetInstallationHistory(limit);
   return result as unknown as Installation[];
+}
+
+export async function checkPrerequisites(): Promise<import("../types/tool").Prerequisite[]> {
+  const result = await CheckPrerequisites();
+  return result as unknown as import("../types/tool").Prerequisite[];
+}
+
+export async function installPrerequisite(id: string): Promise<void> {
+  await InstallPrerequisite(id);
 }
