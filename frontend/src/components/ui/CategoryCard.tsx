@@ -5,6 +5,7 @@ import {
   CommandLineIcon,
   CpuChipIcon,
   PencilSquareIcon,
+  WindowIcon,
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import {
@@ -20,6 +21,7 @@ const ICONS: Record<Category, React.ComponentType<{ className?: string }>> = {
   cloud: CloudIcon,
   editors: PencilSquareIcon,
   terminal: CpuChipIcon,
+  apps: WindowIcon,
 };
 
 interface CategoryCardProps {

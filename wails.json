@@ -6,13 +6,11 @@
   "frontend:build": "npm run build",
   "frontend:dev:watcher": "npm run dev",
   "frontend:dev:serverUrl": "auto",
-  "platform": "linux/amd64",
-  "tags": "webkit2_4_1",
   "info": {
     "productName": "Ayayron",
     "productVersion": "0.1.0",
     "copyright": "2026 Murat Eker",
-    "comments": "Job Application Tracker"
+    "comments": "Dev Environment Setup Tool"
   },
   "author": {
     "name": "Murat Eker",

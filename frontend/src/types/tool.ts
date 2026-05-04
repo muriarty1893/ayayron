@@ -4,7 +4,10 @@ export type Category =
   | "databases"
   | "cloud"
   | "editors"
-  | "terminal";
+  | "terminal"
+  | "apps";
+
+export type PermissionLevel = "user" | "admin";
 
 export type InstallStatus = "installed" | "failed" | "skipped";
 
@@ -13,9 +16,9 @@ export interface Tool {
   name: string;
   description: string;
   category: Category;
-  linuxCmd?: string;
-  windowsCmd?: string;
-  checkCmd: string;
+  section: string;
+  permissionLevel: PermissionLevel;
+  defaultEnabled: boolean;
   requiresSudo: boolean;
   isInstalled: boolean;
   version?: string;

@@ -9,20 +9,28 @@ const (
 	CategoryCloud     Category = "cloud"
 	CategoryEditors   Category = "editors"
 	CategoryTerminal  Category = "terminal"
+	CategoryApps      Category = "apps"
 )
 
-// Tool is a registry entry. IsInstalled and Version are populated at runtime by detectTool.
+type PermissionLevel string
+
+const (
+	PermissionUser  PermissionLevel = "user"
+	PermissionAdmin PermissionLevel = "admin"
+)
+
+// Tool is a parsed registry entry. IsInstalled and Version are populated at runtime.
 type Tool struct {
-	ID           string   `json:"id"`
-	Name         string   `json:"name"`
-	Description  string   `json:"description"`
-	Category     Category `json:"category"`
-	LinuxCmd     string   `json:"linuxCmd,omitempty"`
-	WindowsCmd   string   `json:"windowsCmd,omitempty"`
-	CheckCmd     string   `json:"checkCmd"`
-	RequiresSudo bool     `json:"requiresSudo"`
-	IsInstalled  bool     `json:"isInstalled"`
-	Version      string   `json:"version,omitempty"`
+	ID              string          `json:"id"`
+	Name            string          `json:"name"`
+	Description     string          `json:"description"`
+	Category        Category        `json:"category"`
+	Section         string          `json:"section"`
+	PermissionLevel PermissionLevel `json:"permissionLevel"`
+	DefaultEnabled  bool            `json:"defaultEnabled"`
+	RequiresSudo    bool            `json:"requiresSudo"`
+	IsInstalled     bool            `json:"isInstalled"`
+	Version         string          `json:"version,omitempty"`
 }
 
 // Profile is a preset bundle of tools.
