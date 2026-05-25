@@ -82,44 +82,6 @@ wails build      # production binary → build/bin/ayayron
 
 Output binary: `build/bin/ayayron`
 
-## Project Structure
-
-```
-ayayron/
-├── main.go
-├── app.go                               # 6 Wails-bound methods + goroutine
-├── wails.json
-├── internal/
-│   ├── database/database.go             # GORM + SQLite init
-│   ├── models/
-│   │   ├── tool.go                      # Tool, Category, Profile, PermissionLevel types
-│   │   └── installation.go             # Installation GORM model (persisted)
-│   ├── registry/
-│   │   ├── parse.go                     # INI config parser → []Tool
-│   │   ├── checks.go                    # tool key → check command map
-│   │   └── descriptions.go             # static description strings for known tools
-│   ├── repository/installation_repo.go  # Create + List history queries
-│   └── scripts/
-│       ├── embed.go                     # go:embed declaration
-│       ├── scripts.go                   # ReadConfig, ExtractToTemp, GenerateConfig
-│       └── files/                       # bundled scripts + configs (6 files)
-│           ├── ubuntu.sh / ubuntu.config
-│           ├── macos.sh  / macos.config
-│           └── windows.ps1 / windows.config
-└── frontend/src/
-    ├── components/
-    │   ├── wizard/                      # WizardShell, StepCategories, StepTools, StepInstall
-    │   ├── install/                     # LiveTerminal, InstallProgress
-    │   ├── history/                     # HistoryList
-    │   ├── layout/                      # AppShell, Sidebar, TopBar
-    │   └── ui/                          # CategoryCard, ProfileCard, ToolItem, ToolBadge, SudoWarning
-    ├── hooks/                           # useTools, useWizard, useInstallation
-    ├── pages/                           # WizardPage, HistoryPage
-    ├── services/tools.ts                # Wails bindings wrapper
-    ├── types/tool.ts                    # TypeScript type definitions
-    └── constants/categories.ts         # Category labels, colors, Tailwind class maps
-```
-
 ## Updating Bundled Scripts
 
 The scripts in `internal/scripts/files/` are copies from [kartalbas/setup-dev-environment](https://github.com/kartalbas/setup-dev-environment). To pull in upstream changes:
