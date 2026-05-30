@@ -23,35 +23,35 @@ export const CATEGORY_LABELS: Record<Category, string> = {
 };
 
 export const CATEGORY_DESCRIPTIONS: Record<Category, string> = {
-  core: "git, curl, jq, build tools, utilities…",
-  languages: "Node.js, Python, Go, Rust, Java…",
-  databases: "PostgreSQL, MySQL, Redis, SQLite…",
-  cloud: "Docker, kubectl, AWS CLI, Terraform…",
-  editors: "VS Code, Neovim, Vim…",
-  terminal: "Starship, tmux, fzf, zoxide, bat…",
-  dotfiles: "Hyprland desktop configs and shells…",
-  apps: "Browsers, fonts, GUI applications…",
+  core: "git, curl, jq, build tools, utilities...",
+  languages: "Node.js, Python, Go, Rust, Java...",
+  databases: "PostgreSQL, MySQL, Redis, SQLite...",
+  cloud: "Docker, kubectl, AWS CLI, Terraform...",
+  editors: "VS Code, Neovim, Vim...",
+  terminal: "Starship, tmux, fzf, zoxide, bat...",
+  dotfiles: "Hyprland desktop configs and shells...",
+  apps: "Browsers, fonts, GUI applications...",
 };
 
-// Explicit Tailwind classes — must be full strings (no dynamic concatenation)
+// Explicit Tailwind classes must be full strings (no dynamic concatenation).
 export const CATEGORY_RING: Record<Category, string> = {
-  core: "ring-blue-500 bg-blue-500/10 border-blue-500/30",
-  languages: "ring-indigo-500 bg-indigo-500/10 border-indigo-500/30",
-  databases: "ring-emerald-500 bg-emerald-500/10 border-emerald-500/30",
-  cloud: "ring-violet-500 bg-violet-500/10 border-violet-500/30",
-  editors: "ring-orange-500 bg-orange-500/10 border-orange-500/30",
-  terminal: "ring-cyan-500 bg-cyan-500/10 border-cyan-500/30",
-  dotfiles: "ring-teal-500 bg-teal-500/10 border-teal-500/30",
-  apps: "ring-pink-500 bg-pink-500/10 border-pink-500/30",
+  core: "ring-sky-500 bg-sky-50 border-sky-200",
+  languages: "ring-indigo-500 bg-indigo-50 border-indigo-200",
+  databases: "ring-emerald-500 bg-emerald-50 border-emerald-200",
+  cloud: "ring-violet-500 bg-violet-50 border-violet-200",
+  editors: "ring-orange-500 bg-orange-50 border-orange-200",
+  terminal: "ring-cyan-500 bg-cyan-50 border-cyan-200",
+  dotfiles: "ring-teal-500 bg-teal-50 border-teal-200",
+  apps: "ring-rose-500 bg-rose-50 border-rose-200",
 };
 
 export const CATEGORY_ICON_COLOR: Record<Category, string> = {
-  core: "text-blue-400",
-  languages: "text-indigo-400",
-  databases: "text-emerald-400",
-  cloud: "text-violet-400",
-  editors: "text-orange-400",
-  terminal: "text-cyan-400",
-  dotfiles: "text-teal-400",
-  apps: "text-pink-400",
+  core: "text-sky-700",
+  languages: "text-indigo-700",
+  databases: "text-emerald-700",
+  cloud: "text-violet-700",
+  editors: "text-orange-700",
+  terminal: "text-cyan-700",
+  dotfiles: "text-teal-700",
+  apps: "text-rose-700",
 };

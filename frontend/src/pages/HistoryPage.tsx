@@ -6,7 +6,7 @@ export function HistoryPage() {
   const { data: records = [], isLoading } = useInstallationHistory(100);
 
   if (isLoading) {
-    return <div className="py-12 text-center text-gray-500">Loading…</div>;
+    return <div className="py-12 text-center text-sm font-medium text-slate-500">Loading...</div>;
   }
 
   if (records.length === 0) {

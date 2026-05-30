@@ -1,11 +1,4 @@
-import {
-  ArrowPathIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  MinusCircleIcon,
-  XCircleIcon,
-} from "@heroicons/react/24/outline";
-import { ProgressBar } from "@tremor/react";
+import { CheckCircle2, CircleMinus, Clock3, Loader2, XCircle } from "lucide-react";
 import type { ToolInstallState } from "../../hooks/useInstallation";
 import type { Tool } from "../../types/tool";
 
@@ -18,15 +11,15 @@ interface InstallProgressProps {
 function StateIcon({ state }: { state: ToolInstallState }) {
   switch (state) {
     case "running":
-      return <ArrowPathIcon className="h-4 w-4 animate-spin text-indigo-400" />;
+      return <Loader2 className="h-4 w-4 animate-spin text-teal-700" />;
     case "success":
-      return <CheckCircleIcon className="h-4 w-4 text-emerald-400" />;
+      return <CheckCircle2 className="h-4 w-4 text-emerald-700" />;
     case "failed":
-      return <XCircleIcon className="h-4 w-4 text-red-400" />;
+      return <XCircle className="h-4 w-4 text-red-700" />;
     case "skipped":
-      return <MinusCircleIcon className="h-4 w-4 text-gray-500" />;
+      return <CircleMinus className="h-4 w-4 text-slate-400" />;
     default:
-      return <ClockIcon className="h-4 w-4 text-gray-600" />;
+      return <Clock3 className="h-4 w-4 text-slate-400" />;
   }
 }
 
@@ -36,13 +29,20 @@ export function InstallProgress({ tools, toolStates, progress }: InstallProgress
     : 0;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <div>
-        <div className="mb-1 flex items-center justify-between text-sm text-gray-400">
-          <span>{progress?.currentToolName ? `Installing ${progress.currentToolName}…` : "Preparing…"}</span>
+        <div className="mb-2 flex items-center justify-between text-sm font-medium text-slate-600">
+          <span>
+            {progress?.currentToolName ? `Installing ${progress.currentToolName}...` : "Preparing..."}
+          </span>
           <span>{pct}%</span>
         </div>
-        <ProgressBar value={pct} color="indigo" className="h-2" />
+        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+          <div
+            className="h-full rounded-full bg-teal-700 transition-all duration-300"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
         {tools.map((t) => {
@@ -50,10 +50,10 @@ export function InstallProgress({ tools, toolStates, progress }: InstallProgress
           return (
             <div
               key={t.id}
-              className="flex items-center gap-2 rounded-lg border border-white/5 bg-white/5 px-3 py-2"
+              className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
             >
               <StateIcon state={state} />
-              <span className="truncate text-xs text-gray-300">{t.name}</span>
+              <span className="truncate text-xs font-medium text-slate-700">{t.name}</span>
             </div>
           );
         })}

@@ -1,3 +1,5 @@
+import { MonitorCog } from "lucide-react";
+
 interface TopBarProps {
   title: string;
   platform?: string;
@@ -5,10 +7,16 @@ interface TopBarProps {
 
 export function TopBar({ title, platform }: TopBarProps) {
   return (
-    <header className="flex items-center justify-between border-b border-gray-800 bg-gray-900 px-6 py-4">
-      <h1 className="text-lg font-semibold text-white">{title}</h1>
+    <header className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-6 py-4 backdrop-blur">
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight text-slate-950">{title}</h1>
+        <p className="mt-0.5 text-sm text-slate-500">
+          Build a clean developer workstation from embedded scripts.
+        </p>
+      </div>
       {platform && (
-        <span className="rounded-md border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-gray-400">
+        <span className="inline-flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600">
+          <MonitorCog className="h-3.5 w-3.5 text-teal-700" />
           {platform === "windows" ? "Windows" : "Linux"}
         </span>
       )}
