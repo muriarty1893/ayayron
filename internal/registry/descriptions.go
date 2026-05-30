@@ -80,3 +80,30 @@ var DescriptionMap = map[string]string{
 	"iterm2":         "Feature-rich terminal emulator for macOS",
 	"homebrew":       "The missing package manager for macOS",
 }
+
+func init() {
+	DescriptionMap["illogical-impulse"] = "Hyprland dotfiles and Quickshell desktop configuration by end-4"
+	DescriptionMap["tmux-general"] = "Practical tmux defaults: mouse, 1-based windows, large history, RGB color, reload binding"
+	DescriptionMap["tmux-vim-keys"] = "Vim-style pane movement, resizing, and copy-mode keys"
+	DescriptionMap["tmux-dracula"] = "Dracula tmux theme installed through tmux plugin manager"
+	DescriptionMap["tmux-catppuccin"] = "Catppuccin tmux theme installed through tmux plugin manager"
+	DescriptionMap["tmux-oh-my-tmux"] = "Oh my tmux by gpakosz: a full-featured tmux configuration"
+	DescriptionMap["kitty"] = "Fast GPU-accelerated terminal emulator"
+	DescriptionMap["ghostty"] = "Fast native terminal emulator by Mitchell Hashimoto"
+	DescriptionMap["btop"] = "Resource monitor with CPU, memory, disk, network, and process views"
+	DescriptionMap["localsend"] = "Local network file sharing app, similar to AirDrop"
+	DescriptionMap["autokey"] = "Desktop automation and text expansion tool for Linux"
+	DescriptionMap["brave-browser"] = "Privacy-focused Chromium-based web browser"
+	DescriptionMap["copyq"] = "Clipboard manager with searchable history and scripting"
+	DescriptionMap["anydesk"] = "Remote desktop client for support and unattended access"
+	DescriptionMap["moonlight"] = "Game streaming client for Sunshine and GeForce hosts"
+	DescriptionMap["obsidian"] = "Markdown knowledge base and note-taking app"
+	DescriptionMap["obs-studio"] = "Video recording and live streaming studio"
+	DescriptionMap["obs-virtual-camera"] = "Linux v4l2loopback drivers for OBS virtual camera"
+	DescriptionMap["whatsapp-web"] = "Unofficial desktop wrapper for WhatsApp Web"
+	DescriptionMap["whatsapp"] = "WhatsApp desktop app"
+	DescriptionMap["font-fira-code-nerd-font"] = "FiraCode Nerd Font"
+	DescriptionMap["font-cascadia-code-nerd-font"] = "Cascadia Code Nerd Font"
+	DescriptionMap["font-jetbrains-mono-nerd-font"] = "JetBrains Mono Nerd Font"
+	DescriptionMap["font-hack-nerd-font"] = "Hack Nerd Font"
+}

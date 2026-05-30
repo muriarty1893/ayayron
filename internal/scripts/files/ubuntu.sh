@@ -206,6 +206,106 @@ install_snap_package() {
     fi
 }
 
+install_brave_browser() {
+    local should_install="$1"
+
+    [ "$should_install" != "true" ] && print_gray "Skipped Brave Browser (disabled in config)" && return
+
+    if command_exists brave-browser; then
+        print_success "Brave Browser already installed"
+        return
+    fi
+
+    print_info "Installing Brave Browser from official APT repository..."
+    sudo apt-get install -y curl >/dev/null 2>&1
+    sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
+        https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+    sudo curl -fsSLo /etc/apt/sources.list.d/brave-browser-release.sources \
+        https://brave-browser-apt-release.s3.brave.com/brave-browser.sources
+    sudo apt-get update >/dev/null 2>&1
+    sudo apt-get install -y brave-browser >/dev/null 2>&1
+
+    if command_exists brave-browser; then
+        print_success "Brave Browser installed"
+    else
+        print_error "Failed to install Brave Browser"
+    fi
+}
+
+install_anydesk() {
+    local should_install="$1"
+
+    [ "$should_install" != "true" ] && print_gray "Skipped AnyDesk (disabled in config)" && return
+
+    if command_exists anydesk || dpkg -l anydesk 2>/dev/null | grep -q "^ii"; then
+        print_success "AnyDesk already installed"
+        return
+    fi
+
+    print_info "Installing AnyDesk from official APT repository..."
+    sudo apt-get install -y ca-certificates curl gpg >/dev/null 2>&1
+    curl -fsSL https://keys.anydesk.com/repos/DEB-GPG-KEY | \
+        sudo gpg --dearmor --yes -o /usr/share/keyrings/anydesk.gpg
+    printf '%s\n' \
+        'Types: deb' \
+        'URIs: https://deb.anydesk.com' \
+        'Suites: all' \
+        'Components: main' \
+        'Signed-By: /usr/share/keyrings/anydesk.gpg' | \
+        sudo tee /etc/apt/sources.list.d/anydesk.sources >/dev/null
+    sudo apt-get update >/dev/null 2>&1
+    sudo apt-get install -y anydesk >/dev/null 2>&1
+
+    if dpkg -l anydesk 2>/dev/null | grep -q "^ii"; then
+        print_success "AnyDesk installed"
+    else
+        print_error "Failed to install AnyDesk"
+    fi
+}
+
+install_obs_virtual_camera() {
+    local should_install="$1"
+
+    [ "$should_install" != "true" ] && print_gray "Skipped OBS virtual camera drivers (disabled in config)" && return
+
+    print_info "Installing OBS virtual camera drivers..."
+    sudo apt-get install -y "linux-headers-$(uname -r)" v4l2loopback-dkms v4l2loopback-utils >/dev/null 2>&1
+    if dpkg -l v4l2loopback-dkms 2>/dev/null | grep -q "^ii"; then
+        print_success "OBS virtual camera drivers installed"
+        print_warning "If virtual camera is not visible, reboot or run: sudo modprobe v4l2loopback"
+    else
+        print_error "Failed to install OBS virtual camera drivers"
+    fi
+}
+
+install_nerd_font() {
+    local font_name="$1"
+    local archive_name="$2"
+    local should_install="$3"
+    local font_dir="$HOME/.local/share/fonts/NerdFonts/$font_name"
+    local tmp_zip
+
+    [ "$should_install" != "true" ] && print_gray "Skipped $font_name Nerd Font (disabled in config)" && return
+
+    if [ -d "$font_dir" ] && find "$font_dir" -type f \( -name '*.ttf' -o -name '*.otf' \) | grep -q .; then
+        print_success "$font_name Nerd Font already installed"
+        return
+    fi
+
+    if ! command_exists unzip; then
+        install_apt_package "unzip" "unzip" "true"
+    fi
+
+    print_info "Installing $font_name Nerd Font..."
+    mkdir -p "$font_dir"
+    tmp_zip="$(mktemp)"
+    curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/${archive_name}.zip" -o "$tmp_zip"
+    unzip -o -q "$tmp_zip" -d "$font_dir"
+    rm -f "$tmp_zip"
+    fc-cache -f "$HOME/.local/share/fonts" >/dev/null 2>&1 || true
+    print_success "$font_name Nerd Font installed"
+}
+
 # ============================================================================
 # NVM INSTALLATION
 # ============================================================================
@@ -324,6 +424,274 @@ install_pnpm() {
         print_warning "Restart terminal or run: source ~/.bashrc (or ~/.zshrc)"
     else
         print_error "Failed to install pnpm"
+    fi
+}
+
+tmux_config_requested() {
+    [ "$(get_config_value 'UserLevel.TmuxConfig.tmux-general')" == "true" ] || \
+    [ "$(get_config_value 'UserLevel.TmuxConfig.tmux-vim-keys')" == "true" ] || \
+    [ "$(get_config_value 'UserLevel.TmuxConfig.tmux-dracula')" == "true" ] || \
+    [ "$(get_config_value 'UserLevel.TmuxConfig.tmux-catppuccin')" == "true" ] || \
+    [ "$(get_config_value 'UserLevel.TmuxConfig.tmux-oh-my-tmux')" == "true" ]
+}
+
+backup_tmux_config() {
+    local conf="$HOME/.tmux.conf"
+    if [ -f "$conf" ]; then
+        local backup="$conf.ayayron-backup-$(date +%Y%m%d-%H%M%S)"
+        cp "$conf" "$backup"
+        print_success "Backed up .tmux.conf to $(basename "$backup")"
+    fi
+}
+
+ensure_tpm() {
+    if [ -d "$HOME/.tmux/plugins/tpm" ]; then
+        print_success "tmux-tpm already installed"
+        return 0
+    fi
+
+    if ! command_exists git; then
+        print_error "git not found. Enable Git in Core Tools first."
+        return 1
+    fi
+
+    print_info "Installing tmux-tpm..."
+    git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm" >/dev/null 2>&1
+    print_success "tmux-tpm installed"
+}
+
+write_tmux_managed_config() {
+    local conf="$HOME/.tmux.conf"
+    local tmp
+    tmp="$(mktemp)"
+    local use_general="$1"
+    local use_vim="$2"
+    local use_dracula="$3"
+    local use_catppuccin="$4"
+
+    touch "$conf"
+    awk '
+        /# >>> ayayron tmux/ { skip = 1; next }
+        /# <<< ayayron tmux/ { skip = 0; next }
+        skip != 1 { print }
+    ' "$conf" > "$tmp"
+
+    cat >> "$tmp" <<'EOF'
+
+# >>> ayayron tmux
+# Managed by Ayayron. Re-run Ayayron to update this block.
+EOF
+
+    if [ "$use_general" == "true" ]; then
+        cat >> "$tmp" <<'EOF'
+set -g mouse on
+set -g history-limit 50000
+set -g display-time 4000
+set -g status-interval 5
+set -g base-index 1
+setw -g pane-base-index 1
+set -g renumber-windows on
+set -g default-terminal "tmux-256color"
+set -as terminal-overrides ",xterm-256color:RGB"
+bind r source-file ~/.tmux.conf \; display-message "tmux config reloaded"
+EOF
+        print_success "tmux-general configured"
+    fi
+
+    if [ "$use_vim" == "true" ]; then
+        cat >> "$tmp" <<'EOF'
+setw -g mode-keys vi
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
+bind -r H resize-pane -L 5
+bind -r J resize-pane -D 5
+bind -r K resize-pane -U 5
+bind -r L resize-pane -R 5
+EOF
+        print_success "tmux-vim-keys configured"
+    fi
+
+    if [ "$use_dracula" == "true" ] || [ "$use_catppuccin" == "true" ]; then
+        cat >> "$tmp" <<'EOF'
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+EOF
+    fi
+
+    if [ "$use_dracula" == "true" ]; then
+        cat >> "$tmp" <<'EOF'
+set -g @plugin 'dracula/tmux'
+set -g @dracula-show-powerline true
+set -g @dracula-show-left-icon session
+set -g @dracula-show-battery false
+set -g @dracula-refresh-rate 10
+EOF
+        print_success "tmux-dracula configured"
+    fi
+
+    if [ "$use_catppuccin" == "true" ]; then
+        cat >> "$tmp" <<'EOF'
+set -g @plugin 'catppuccin/tmux#v2.3.0'
+set -g @catppuccin_flavor 'mocha'
+set -g @catppuccin_window_status_style 'rounded'
+EOF
+        print_success "tmux-catppuccin configured"
+    fi
+
+    if [ "$use_dracula" == "true" ] || [ "$use_catppuccin" == "true" ]; then
+        cat >> "$tmp" <<'EOF'
+run '~/.tmux/plugins/tpm/tpm'
+EOF
+    fi
+
+    cat >> "$tmp" <<'EOF'
+# <<< ayayron tmux
+EOF
+
+    mv "$tmp" "$conf"
+}
+
+install_oh_my_tmux() {
+    if [ "$(get_config_value 'UserLevel.TmuxConfig.tmux-oh-my-tmux')" != "true" ]; then
+        print_gray "Skipped tmux-oh-my-tmux (disabled in config)"
+        return
+    fi
+
+    if ! command_exists git; then
+        print_error "git not found. Enable Git in Core Tools first."
+        return 1
+    fi
+
+    backup_tmux_config
+    if [ -d "$HOME/.tmux" ] && [ ! -L "$HOME/.tmux" ]; then
+        local backup="$HOME/.tmux.ayayron-backup-$(date +%Y%m%d-%H%M%S)"
+        mv "$HOME/.tmux" "$backup"
+        print_success "Backed up .tmux directory to $(basename "$backup")"
+    fi
+
+    print_info "Installing tmux-oh-my-tmux..."
+    git clone --single-branch https://github.com/gpakosz/.tmux.git "$HOME/.tmux" >/dev/null 2>&1
+    ln -s -f "$HOME/.tmux/.tmux.conf" "$HOME/.tmux.conf"
+    cp "$HOME/.tmux/.tmux.conf.local" "$HOME/.tmux.conf.local"
+    print_success "tmux-oh-my-tmux installed"
+}
+
+configure_tmux() {
+    if ! tmux_config_requested; then
+        return
+    fi
+
+    print_section "tmux Configuration"
+
+    if ! command_exists tmux; then
+        print_info "tmux is required for selected tmux configuration"
+        install_apt_package "tmux" "tmux" "true"
+    fi
+
+    if ! command_exists tmux; then
+        print_error "tmux could not be installed"
+        return 1
+    fi
+
+    if [ "$(get_config_value 'UserLevel.TmuxConfig.tmux-oh-my-tmux')" == "true" ]; then
+        install_oh_my_tmux
+        return
+    fi
+
+    local use_general
+    local use_vim
+    local use_dracula
+    local use_catppuccin
+    use_general="$(get_config_value 'UserLevel.TmuxConfig.tmux-general')"
+    use_vim="$(get_config_value 'UserLevel.TmuxConfig.tmux-vim-keys')"
+    use_dracula="$(get_config_value 'UserLevel.TmuxConfig.tmux-dracula')"
+    use_catppuccin="$(get_config_value 'UserLevel.TmuxConfig.tmux-catppuccin')"
+
+    if [ "$use_dracula" == "true" ] || [ "$use_catppuccin" == "true" ]; then
+        ensure_tpm || return 1
+    fi
+
+    backup_tmux_config
+    write_tmux_managed_config "$use_general" "$use_vim" "$use_dracula" "$use_catppuccin"
+
+    if [ "$use_dracula" == "true" ] || [ "$use_catppuccin" == "true" ]; then
+        "$HOME/.tmux/plugins/tpm/bin/install_plugins" >/dev/null 2>&1 || \
+            print_warning "TPM plugin install did not complete; open tmux and press prefix + I"
+    fi
+
+    if command_exists tmux && tmux has-session 2>/dev/null; then
+        tmux source-file "$HOME/.tmux.conf" >/dev/null 2>&1 || true
+        print_success "tmux config reloaded"
+    else
+        print_info "Start tmux to load the new configuration"
+    fi
+}
+
+backup_illogical_impulse_configs() {
+    local backup_root="$HOME/.local/share/ayayron/backups/illogical-impulse-$(date +%Y%m%d-%H%M%S)"
+    local backed_up=false
+    local targets=(
+        "$HOME/.config/hypr"
+        "$HOME/.config/quickshell"
+        "$HOME/.config/ags"
+        "$HOME/.config/illogical-impulse"
+        "$HOME/.config/fuzzel"
+        "$HOME/.config/kitty"
+        "$HOME/.config/foot"
+        "$HOME/.config/rofi"
+        "$HOME/.config/waybar"
+        "$HOME/.config/wlogout"
+        "$HOME/.local/share/illogical-impulse"
+        "$HOME/.local/state/quickshell"
+    )
+
+    for target in "${targets[@]}"; do
+        if [ -e "$target" ]; then
+            local rel="${target#$HOME/}"
+            local dest="$backup_root/$rel"
+            mkdir -p "$(dirname "$dest")"
+            cp -a "$target" "$dest"
+            backed_up=true
+            print_success "Backed up $rel"
+        fi
+    done
+
+    if [ "$backed_up" == true ]; then
+        print_warning "Backups saved to $backup_root"
+    else
+        print_gray "No existing Illogical Impulse config paths found to back up"
+    fi
+}
+
+install_illogical_impulse() {
+    local should_install="$1"
+
+    [ "$should_install" != "true" ] && print_gray "Skipped illogical-impulse (disabled in config)" && return
+
+    if [ -d "$HOME/.config/quickshell/ii" ] || [ -d "$HOME/.cache/dots-hyprland" ]; then
+        print_success "illogical-impulse already appears to be installed"
+        return
+    fi
+
+    if ! command_exists curl; then
+        print_error "curl not found. Enable curl in Core Tools first."
+        return 1
+    fi
+
+    print_warning "Illogical Impulse is an interactive upstream dotfiles installer."
+    print_warning "Existing matching config folders will be backed up before it runs."
+    backup_illogical_impulse_configs
+
+    print_info "Installing illogical-impulse from https://ii.clsty.link/get ..."
+    print_info "Initial prompts are answered to run without per-command confirmation."
+
+    if (printf '\n\nn\n'; yes e) | bash <(curl -fsSL https://ii.clsty.link/get); then
+        print_success "illogical-impulse installed"
+    else
+        print_error "Failed to install illogical-impulse"
+        return 1
     fi
 }
 
@@ -678,6 +1046,51 @@ if [ "$TOOLS_USER" == true ]; then
     fi
 
     install_apt_package "tmux" "tmux" "$(get_config_value 'UserLevel.Terminal.tmux')"
+    install_apt_package "kitty" "Kitty" "$(get_config_value 'UserLevel.Terminal.kitty')"
+    install_snap_package "ghostty" "Ghostty" "true" "$(get_config_value 'UserLevel.Terminal.ghostty')"
+    install_apt_package "btop" "btop" "$(get_config_value 'UserLevel.Terminal.btop')"
+
+    configure_tmux
+
+    # ========================================================================
+    # DOTFILES
+    # ========================================================================
+
+    print_section "Dotfiles"
+
+    install_illogical_impulse "$(get_config_value 'UserLevel.Dotfiles.illogical-impulse')"
+
+    # ========================================================================
+    # DESKTOP APPS
+    # ========================================================================
+
+    print_section "Desktop Apps"
+
+    install_snap_package "localsend" "LocalSend" "false" "$(get_config_value 'UserLevel.DesktopApps.localsend')"
+    install_apt_package "autokey-gtk" "AutoKey" "$(get_config_value 'UserLevel.DesktopApps.autokey')"
+    install_brave_browser "$(get_config_value 'UserLevel.DesktopApps.brave-browser')"
+    install_apt_package "copyq" "CopyQ" "$(get_config_value 'UserLevel.DesktopApps.copyq')"
+    install_anydesk "$(get_config_value 'UserLevel.DesktopApps.anydesk')"
+    install_snap_package "moonlight" "Moonlight" "false" "$(get_config_value 'UserLevel.DesktopApps.moonlight')"
+    install_snap_package "obsidian" "Obsidian" "true" "$(get_config_value 'UserLevel.DesktopApps.obsidian')"
+    install_apt_package "obs-studio" "OBS Studio" "$(get_config_value 'UserLevel.DesktopApps.obs-studio')"
+    install_obs_virtual_camera "$(get_config_value 'UserLevel.DesktopApps.obs-virtual-camera')"
+    install_snap_package "unofficial-whatsapp" "WhatsApp Web Desktop" "false" "$(get_config_value 'UserLevel.DesktopApps.whatsapp-web')"
+
+    # ========================================================================
+    # FONTS
+    # ========================================================================
+
+    print_section "Fonts"
+
+    if [ "$(get_config_value 'UserLevel.Fonts.nerd-fonts')" == "true" ]; then
+        install_nerd_font "FiraCode" "FiraCode" "true"
+        install_nerd_font "JetBrainsMono" "JetBrainsMono" "true"
+    fi
+    install_nerd_font "FiraCode" "FiraCode" "$(get_config_value 'UserLevel.Fonts.font-fira-code-nerd-font')"
+    install_nerd_font "CascadiaCode" "CascadiaCode" "$(get_config_value 'UserLevel.Fonts.font-cascadia-code-nerd-font')"
+    install_nerd_font "JetBrainsMono" "JetBrainsMono" "$(get_config_value 'UserLevel.Fonts.font-jetbrains-mono-nerd-font')"
+    install_nerd_font "Hack" "Hack" "$(get_config_value 'UserLevel.Fonts.font-hack-nerd-font')"
 
     # ========================================================================
     # CONFIGURE SHELL PROFILE

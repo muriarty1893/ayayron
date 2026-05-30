@@ -7,6 +7,7 @@ export const CATEGORY_ORDER: Category[] = [
   "cloud",
   "editors",
   "terminal",
+  "dotfiles",
   "apps",
 ];
 
@@ -17,6 +18,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   cloud: "Cloud & DevOps",
   editors: "Editors",
   terminal: "Terminal",
+  dotfiles: "Dotfiles",
   apps: "Apps & Fonts",
 };
 
@@ -27,6 +29,7 @@ export const CATEGORY_DESCRIPTIONS: Record<Category, string> = {
   cloud: "Docker, kubectl, AWS CLI, Terraform…",
   editors: "VS Code, Neovim, Vim…",
   terminal: "Starship, tmux, fzf, zoxide, bat…",
+  dotfiles: "Hyprland desktop configs and shells…",
   apps: "Browsers, fonts, GUI applications…",
 };
 
@@ -38,6 +41,7 @@ export const CATEGORY_RING: Record<Category, string> = {
   cloud: "ring-violet-500 bg-violet-500/10 border-violet-500/30",
   editors: "ring-orange-500 bg-orange-500/10 border-orange-500/30",
   terminal: "ring-cyan-500 bg-cyan-500/10 border-cyan-500/30",
+  dotfiles: "ring-teal-500 bg-teal-500/10 border-teal-500/30",
   apps: "ring-pink-500 bg-pink-500/10 border-pink-500/30",
 };
 
@@ -48,5 +52,6 @@ export const CATEGORY_ICON_COLOR: Record<Category, string> = {
   cloud: "text-violet-400",
   editors: "text-orange-400",
   terminal: "text-cyan-400",
+  dotfiles: "text-teal-400",
   apps: "text-pink-400",
 };

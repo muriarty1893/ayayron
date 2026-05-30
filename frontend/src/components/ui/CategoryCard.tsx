@@ -5,6 +5,7 @@ import {
   CommandLineIcon,
   CpuChipIcon,
   PencilSquareIcon,
+  SwatchIcon,
   WindowIcon,
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
@@ -21,6 +22,7 @@ const ICONS: Record<Category, React.ComponentType<{ className?: string }>> = {
   cloud: CloudIcon,
   editors: PencilSquareIcon,
   terminal: CpuChipIcon,
+  dotfiles: SwatchIcon,
   apps: WindowIcon,
 };
 

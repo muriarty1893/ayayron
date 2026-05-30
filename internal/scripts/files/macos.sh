@@ -355,6 +355,208 @@ install_pnpm() {
     fi
 }
 
+tmux_config_requested() {
+    [ "$(get_config_value 'UserLevel.TmuxConfig.tmux-general')" == "true" ] || \
+    [ "$(get_config_value 'UserLevel.TmuxConfig.tmux-vim-keys')" == "true" ] || \
+    [ "$(get_config_value 'UserLevel.TmuxConfig.tmux-dracula')" == "true" ] || \
+    [ "$(get_config_value 'UserLevel.TmuxConfig.tmux-catppuccin')" == "true" ] || \
+    [ "$(get_config_value 'UserLevel.TmuxConfig.tmux-oh-my-tmux')" == "true" ]
+}
+
+backup_tmux_config() {
+    local conf="$HOME/.tmux.conf"
+    if [ -f "$conf" ]; then
+        local backup="$conf.ayayron-backup-$(date +%Y%m%d-%H%M%S)"
+        cp "$conf" "$backup"
+        print_success "Backed up .tmux.conf to $(basename "$backup")"
+    fi
+}
+
+ensure_tpm() {
+    if [ -d "$HOME/.tmux/plugins/tpm" ]; then
+        print_success "tmux-tpm already installed"
+        return 0
+    fi
+
+    if ! command_exists git; then
+        print_error "git not found. Enable Git in Core Tools first."
+        return 1
+    fi
+
+    print_info "Installing tmux-tpm..."
+    git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm" >/dev/null 2>&1
+    print_success "tmux-tpm installed"
+}
+
+write_tmux_managed_config() {
+    local conf="$HOME/.tmux.conf"
+    local tmp
+    tmp="$(mktemp)"
+    local use_general="$1"
+    local use_vim="$2"
+    local use_dracula="$3"
+    local use_catppuccin="$4"
+
+    touch "$conf"
+    awk '
+        /# >>> ayayron tmux/ { skip = 1; next }
+        /# <<< ayayron tmux/ { skip = 0; next }
+        skip != 1 { print }
+    ' "$conf" > "$tmp"
+
+    cat >> "$tmp" <<'EOF'
+
+# >>> ayayron tmux
+# Managed by Ayayron. Re-run Ayayron to update this block.
+EOF
+
+    if [ "$use_general" == "true" ]; then
+        cat >> "$tmp" <<'EOF'
+set -g mouse on
+set -g history-limit 50000
+set -g display-time 4000
+set -g status-interval 5
+set -g base-index 1
+setw -g pane-base-index 1
+set -g renumber-windows on
+set -g default-terminal "tmux-256color"
+set -as terminal-overrides ",xterm-256color:RGB"
+bind r source-file ~/.tmux.conf \; display-message "tmux config reloaded"
+EOF
+        print_success "tmux-general configured"
+    fi
+
+    if [ "$use_vim" == "true" ]; then
+        cat >> "$tmp" <<'EOF'
+setw -g mode-keys vi
+bind h select-pane -L
+bind j select-pane -D
+bind k select-pane -U
+bind l select-pane -R
+bind -r H resize-pane -L 5
+bind -r J resize-pane -D 5
+bind -r K resize-pane -U 5
+bind -r L resize-pane -R 5
+EOF
+        print_success "tmux-vim-keys configured"
+    fi
+
+    if [ "$use_dracula" == "true" ] || [ "$use_catppuccin" == "true" ]; then
+        cat >> "$tmp" <<'EOF'
+set -g @plugin 'tmux-plugins/tpm'
+set -g @plugin 'tmux-plugins/tmux-sensible'
+EOF
+    fi
+
+    if [ "$use_dracula" == "true" ]; then
+        cat >> "$tmp" <<'EOF'
+set -g @plugin 'dracula/tmux'
+set -g @dracula-show-powerline true
+set -g @dracula-show-left-icon session
+set -g @dracula-show-battery false
+set -g @dracula-refresh-rate 10
+EOF
+        print_success "tmux-dracula configured"
+    fi
+
+    if [ "$use_catppuccin" == "true" ]; then
+        cat >> "$tmp" <<'EOF'
+set -g @plugin 'catppuccin/tmux#v2.3.0'
+set -g @catppuccin_flavor 'mocha'
+set -g @catppuccin_window_status_style 'rounded'
+EOF
+        print_success "tmux-catppuccin configured"
+    fi
+
+    if [ "$use_dracula" == "true" ] || [ "$use_catppuccin" == "true" ]; then
+        cat >> "$tmp" <<'EOF'
+run '~/.tmux/plugins/tpm/tpm'
+EOF
+    fi
+
+    cat >> "$tmp" <<'EOF'
+# <<< ayayron tmux
+EOF
+
+    mv "$tmp" "$conf"
+}
+
+install_oh_my_tmux() {
+    if [ "$(get_config_value 'UserLevel.TmuxConfig.tmux-oh-my-tmux')" != "true" ]; then
+        print_gray "Skipped tmux-oh-my-tmux (disabled in config)"
+        return
+    fi
+
+    if ! command_exists git; then
+        print_error "git not found. Enable Git in Core Tools first."
+        return 1
+    fi
+
+    backup_tmux_config
+    if [ -d "$HOME/.tmux" ] && [ ! -L "$HOME/.tmux" ]; then
+        local backup="$HOME/.tmux.ayayron-backup-$(date +%Y%m%d-%H%M%S)"
+        mv "$HOME/.tmux" "$backup"
+        print_success "Backed up .tmux directory to $(basename "$backup")"
+    fi
+
+    print_info "Installing tmux-oh-my-tmux..."
+    git clone --single-branch https://github.com/gpakosz/.tmux.git "$HOME/.tmux" >/dev/null 2>&1
+    ln -s -f "$HOME/.tmux/.tmux.conf" "$HOME/.tmux.conf"
+    cp "$HOME/.tmux/.tmux.conf.local" "$HOME/.tmux.conf.local"
+    print_success "tmux-oh-my-tmux installed"
+}
+
+configure_tmux() {
+    if ! tmux_config_requested; then
+        return
+    fi
+
+    print_section "tmux Configuration"
+
+    if ! command_exists tmux; then
+        print_info "tmux is required for selected tmux configuration"
+        install_brew_package "tmux" "tmux" "true"
+    fi
+
+    if ! command_exists tmux; then
+        print_error "tmux could not be installed"
+        return 1
+    fi
+
+    if [ "$(get_config_value 'UserLevel.TmuxConfig.tmux-oh-my-tmux')" == "true" ]; then
+        install_oh_my_tmux
+        return
+    fi
+
+    local use_general
+    local use_vim
+    local use_dracula
+    local use_catppuccin
+    use_general="$(get_config_value 'UserLevel.TmuxConfig.tmux-general')"
+    use_vim="$(get_config_value 'UserLevel.TmuxConfig.tmux-vim-keys')"
+    use_dracula="$(get_config_value 'UserLevel.TmuxConfig.tmux-dracula')"
+    use_catppuccin="$(get_config_value 'UserLevel.TmuxConfig.tmux-catppuccin')"
+
+    if [ "$use_dracula" == "true" ] || [ "$use_catppuccin" == "true" ]; then
+        ensure_tpm || return 1
+    fi
+
+    backup_tmux_config
+    write_tmux_managed_config "$use_general" "$use_vim" "$use_dracula" "$use_catppuccin"
+
+    if [ "$use_dracula" == "true" ] || [ "$use_catppuccin" == "true" ]; then
+        "$HOME/.tmux/plugins/tpm/bin/install_plugins" >/dev/null 2>&1 || \
+            print_warning "TPM plugin install did not complete; open tmux and press prefix + I"
+    fi
+
+    if command_exists tmux && tmux has-session 2>/dev/null; then
+        tmux source-file "$HOME/.tmux.conf" >/dev/null 2>&1 || true
+        print_success "tmux config reloaded"
+    else
+        print_info "Start tmux to load the new configuration"
+    fi
+}
+
 # ============================================================================
 # PARSE ARGUMENTS
 # ============================================================================
@@ -671,6 +873,11 @@ if [ "$TOOLS_USER" == true ]; then
     fi
 
     install_brew_package "tmux" "tmux" "$(get_config_value 'UserLevel.Terminal.tmux')"
+    install_brew_cask "kitty" "Kitty" "$(get_config_value 'UserLevel.Terminal.kitty')"
+    install_brew_cask "ghostty" "Ghostty" "$(get_config_value 'UserLevel.Terminal.ghostty')"
+    install_brew_package "btop" "btop" "$(get_config_value 'UserLevel.Terminal.btop')"
+
+    configure_tmux
 
     # ========================================================================
     # FONTS
@@ -685,7 +892,9 @@ if [ "$TOOLS_USER" == true ]; then
     fi
 
     install_brew_cask "font-fira-code-nerd-font" "Fira Code Nerd Font" "$(get_config_value 'UserLevel.Fonts.font-fira-code-nerd-font')"
+    install_brew_cask "font-cascadia-code" "Cascadia Code" "$(get_config_value 'UserLevel.Fonts.font-cascadia-code')"
     install_brew_cask "font-jetbrains-mono-nerd-font" "JetBrains Mono Nerd Font" "$(get_config_value 'UserLevel.Fonts.font-jetbrains-mono-nerd-font')"
+    install_brew_cask "font-hack-nerd-font" "Hack Nerd Font" "$(get_config_value 'UserLevel.Fonts.font-hack-nerd-font')"
 
     # ========================================================================
     # CONFIGURE SHELL PROFILE
@@ -783,13 +992,44 @@ if [ "$TOOLS_APPS" == true ]; then
     install_brew_cask "iterm2" "iTerm2" "$(get_config_value 'Applications.Development.iterm2')"
     install_brew_cask "docker" "Docker Desktop" "$(get_config_value 'Applications.Development.docker')"
 
+    print_section "Browsers"
+    install_brew_cask "google-chrome" "Google Chrome" "$(get_config_value 'Applications.Browsers.google-chrome')"
+    install_brew_cask "firefox" "Firefox" "$(get_config_value 'Applications.Browsers.firefox')"
+    install_brew_cask "brave-browser" "Brave Browser" "$(get_config_value 'Applications.Browsers.brave-browser')"
+    install_brew_cask "arc" "Arc" "$(get_config_value 'Applications.Browsers.arc')"
+
     print_section "Productivity Applications"
     install_brew_cask "rectangle" "Rectangle" "$(get_config_value 'Applications.Productivity.rectangle')"
+    install_brew_cask "raycast" "Raycast" "$(get_config_value 'Applications.Productivity.raycast')"
+    install_brew_cask "alfred" "Alfred" "$(get_config_value 'Applications.Productivity.alfred')"
+    install_brew_cask "notion" "Notion" "$(get_config_value 'Applications.Productivity.notion')"
+    install_brew_cask "obsidian" "Obsidian" "$(get_config_value 'Applications.Productivity.obsidian')"
+    install_brew_cask "localsend" "LocalSend" "$(get_config_value 'Applications.Productivity.localsend')"
+    install_brew_cask "copyq" "CopyQ" "$(get_config_value 'Applications.Productivity.copyq')"
+    if [ "$(get_config_value 'Applications.Productivity.autokey')" == "true" ]; then
+        print_warning "AutoKey is Linux-only; skipping on macOS"
+    else
+        print_gray "Skipped AutoKey (disabled in config)"
+    fi
+
+    print_section "Communication"
+    install_brew_cask "slack" "Slack" "$(get_config_value 'Applications.Communication.slack')"
+    install_brew_cask "discord" "Discord" "$(get_config_value 'Applications.Communication.discord')"
+    install_brew_cask "zoom" "Zoom" "$(get_config_value 'Applications.Communication.zoom')"
+    install_brew_cask "whatsapp" "WhatsApp" "$(get_config_value 'Applications.Communication.whatsapp')"
+    install_brew_cask "anydesk" "AnyDesk" "$(get_config_value 'Applications.Communication.anydesk')"
 
     print_section "Utilities"
     install_brew_cask "the-unarchiver" "The Unarchiver" "$(get_config_value 'Applications.Utilities.the-unarchiver')"
     install_brew_cask "appcleaner" "AppCleaner" "$(get_config_value 'Applications.Utilities.appcleaner')"
     install_brew_cask "stats" "Stats" "$(get_config_value 'Applications.Utilities.stats')"
+    install_brew_cask "keepingyouawake" "KeepingYouAwake" "$(get_config_value 'Applications.Utilities.keepingyouawake')"
+
+    print_section "Media"
+    install_brew_cask "vlc" "VLC" "$(get_config_value 'Applications.Media.vlc')"
+    install_brew_cask "spotify" "Spotify" "$(get_config_value 'Applications.Media.spotify')"
+    install_brew_cask "moonlight" "Moonlight" "$(get_config_value 'Applications.Media.moonlight')"
+    install_brew_cask "obs" "OBS Studio" "$(get_config_value 'Applications.Media.obs')"
 
     print_section "✅ Applications Installation Complete!"
     echo ""

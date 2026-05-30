@@ -64,6 +64,9 @@ func TestSectionToCategory(t *testing.T) {
 		{"AdminLevel.Editors", models.CategoryEditors},
 		{"Applications.Development", models.CategoryEditors},
 		{"UserLevel.Terminal", models.CategoryTerminal},
+		{"UserLevel.TmuxConfig", models.CategoryTerminal},
+		{"UserLevel.Dotfiles", models.CategoryDotfiles},
+		{"UserLevel.DesktopApps", models.CategoryApps},
 		{"UserLevel.Fonts", models.CategoryApps},
 		{"AdminLevel.Fonts", models.CategoryApps},
 		{"AdminLevel.Browsers", models.CategoryApps},
@@ -94,6 +97,9 @@ MinimalInstall=false
 git=true
 curl=false
 
+[UserLevel.Dotfiles]
+illogical-impulse=false
+
 [AdminLevel.Databases]
 postgresql=true
 `)
@@ -104,9 +110,9 @@ func TestParseConfig_Basic(t *testing.T) {
 		t.Fatalf("ParseConfig: %v", err)
 	}
 
-	// [General] must be skipped; expect exactly 3 tools.
-	if len(tools) != 3 {
-		t.Fatalf("expected 3 tools, got %d", len(tools))
+	// [General] must be skipped; expect exactly 4 tools.
+	if len(tools) != 4 {
+		t.Fatalf("expected 4 tools, got %d", len(tools))
 	}
 }
 
@@ -130,6 +136,9 @@ func TestParseConfig_ToolIDs(t *testing.T) {
 	if _, ok := byID["AdminLevel.Databases.postgresql"]; !ok {
 		t.Error("expected tool AdminLevel.Databases.postgresql")
 	}
+	if _, ok := byID["UserLevel.Dotfiles.illogical-impulse"]; !ok {
+		t.Error("expected tool UserLevel.Dotfiles.illogical-impulse")
+	}
 }
 
 func TestParseConfig_DefaultEnabled(t *testing.T) {
@@ -151,6 +160,9 @@ func TestParseConfig_DefaultEnabled(t *testing.T) {
 	}
 	if !byID["AdminLevel.Databases.postgresql"].DefaultEnabled {
 		t.Error("postgresql should have DefaultEnabled=true")
+	}
+	if byID["UserLevel.Dotfiles.illogical-impulse"].DefaultEnabled {
+		t.Error("illogical-impulse should have DefaultEnabled=false")
 	}
 }
 
@@ -269,6 +281,15 @@ neovim=true
 [UserLevel.Terminal]
 tmux=true
 
+[UserLevel.TmuxConfig]
+tmux-general=true
+
+[UserLevel.Dotfiles]
+illogical-impulse=true
+
+[UserLevel.DesktopApps]
+localsend=true
+
 [Applications.Browsers]
 firefox=true
 `)
@@ -292,6 +313,9 @@ firefox=true
 		{"UserLevel.Containers.docker-compose", models.CategoryCloud},
 		{"UserLevel.Editors.neovim", models.CategoryEditors},
 		{"UserLevel.Terminal.tmux", models.CategoryTerminal},
+		{"UserLevel.TmuxConfig.tmux-general", models.CategoryTerminal},
+		{"UserLevel.Dotfiles.illogical-impulse", models.CategoryDotfiles},
+		{"UserLevel.DesktopApps.localsend", models.CategoryApps},
 		{"Applications.Browsers.firefox", models.CategoryApps},
 	}
 	for _, c := range cases {

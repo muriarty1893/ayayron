@@ -3,6 +3,7 @@ import {
   ExclamationCircleIcon,
   MinusCircleIcon,
 } from "@heroicons/react/24/outline";
+import { useState } from "react";
 import type { useInstallation } from "../../hooks/useInstallation";
 import type { Tool } from "../../types/tool";
 import { InstallProgress } from "../install/InstallProgress";
@@ -18,8 +19,13 @@ interface StepInstallProps {
 export function StepInstall({ selectedTools, installation, onBack, onReset }: StepInstallProps) {
   const { isRunning, isDone, progress, toolStates, lines, result, error, start, cancel } =
     installation;
+  const [acknowledgedDotfiles, setAcknowledgedDotfiles] = useState(false);
 
   const hasStarted = isRunning || isDone;
+  const hasIllogicalImpulse = selectedTools.some(
+    (tool) => tool.id === "UserLevel.Dotfiles.illogical-impulse",
+  );
+  const canBegin = !hasIllogicalImpulse || acknowledgedDotfiles;
 
   return (
     <div className="flex flex-col gap-5">
@@ -42,6 +48,21 @@ export function StepInstall({ selectedTools, installation, onBack, onReset }: St
               </div>
             ))}
           </div>
+          {hasIllogicalImpulse && (
+            <label className="mb-5 flex gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100">
+              <input
+                type="checkbox"
+                checked={acknowledgedDotfiles}
+                onChange={(event) => setAcknowledgedDotfiles(event.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-amber-300 bg-transparent text-amber-500 focus:ring-amber-500"
+              />
+              <span>
+                Illogical Impulse runs an upstream interactive installer and may overwrite Hyprland,
+                Quickshell, launcher, terminal, and shell config files. Ayayron creates backups of
+                matching config paths before starting it.
+              </span>
+            </label>
+          )}
           <div className="flex items-center justify-between">
             <button
               type="button"
@@ -52,8 +73,13 @@ export function StepInstall({ selectedTools, installation, onBack, onReset }: St
             </button>
             <button
               type="button"
-              onClick={() => start(selectedTools.map((t) => t.id))}
-              className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500"
+              onClick={() => {
+                if (canBegin) {
+                  start(selectedTools.map((t) => t.id));
+                }
+              }}
+              disabled={!canBegin}
+              className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Begin Installation
             </button>

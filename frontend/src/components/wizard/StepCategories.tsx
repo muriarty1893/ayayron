@@ -62,6 +62,9 @@ export function StepCategories({
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {CATEGORY_ORDER.map((cat) => {
             const catTools = tools.filter((t) => t.category === cat);
+            if (catTools.length === 0) {
+              return null;
+            }
             const installed = catTools.filter((t) => t.isInstalled).length;
             return (
               <CategoryCard

@@ -9,6 +9,7 @@ const (
 	CategoryCloud     Category = "cloud"
 	CategoryEditors   Category = "editors"
 	CategoryTerminal  Category = "terminal"
+	CategoryDotfiles  Category = "dotfiles"
 	CategoryApps      Category = "apps"
 )
 

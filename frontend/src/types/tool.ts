@@ -20,6 +20,7 @@ export type Category =
   | "cloud"
   | "editors"
   | "terminal"
+  | "dotfiles"
   | "apps";
 
 export type PermissionLevel = "user" | "admin";

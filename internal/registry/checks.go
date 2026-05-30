@@ -64,6 +64,33 @@ var CheckCmds = map[string]string{
 	"composer":    "composer --version",
 	"maven":       "mvn --version",
 	"gradle":      "gradle --version",
+	"kitty":       "kitty --version",
+	"ghostty":     "ghostty --version",
+	"btop":        "btop --version",
+	"copyq":       "copyq --version",
+	"obs-studio":  "obs --version",
+}
+
+func init() {
+	CheckCmds["illogical-impulse"] = `[ -d "$HOME/.config/quickshell/ii" ] || [ -d "$HOME/.cache/dots-hyprland" ]`
+	CheckCmds["tmux-general"] = `[ -f "$HOME/.tmux.conf" ] && grep -q "history-limit 50000" "$HOME/.tmux.conf"`
+	CheckCmds["tmux-vim-keys"] = `[ -f "$HOME/.tmux.conf" ] && grep -q "mode-keys vi" "$HOME/.tmux.conf"`
+	CheckCmds["tmux-dracula"] = `[ -f "$HOME/.tmux.conf" ] && grep -q "dracula/tmux" "$HOME/.tmux.conf"`
+	CheckCmds["tmux-catppuccin"] = `[ -f "$HOME/.tmux.conf" ] && grep -q "catppuccin/tmux" "$HOME/.tmux.conf"`
+	CheckCmds["tmux-oh-my-tmux"] = `[ -f "$HOME/.tmux/.tmux.conf.local" ] || [ -f "$HOME/.tmux.conf.local" ]`
+	CheckCmds["localsend"] = `command -v localsend >/dev/null 2>&1 || command -v localsend_app >/dev/null 2>&1 || [ -d /snap/localsend ]`
+	CheckCmds["autokey"] = `command -v autokey >/dev/null 2>&1 || command -v autokey-gtk >/dev/null 2>&1`
+	CheckCmds["brave-browser"] = `command -v brave-browser >/dev/null 2>&1 || [ -d "/Applications/Brave Browser.app" ]`
+	CheckCmds["anydesk"] = `command -v anydesk >/dev/null 2>&1 || [ -d "/Applications/AnyDesk.app" ]`
+	CheckCmds["moonlight"] = `command -v moonlight >/dev/null 2>&1 || [ -d /snap/moonlight ] || [ -d "/Applications/Moonlight.app" ]`
+	CheckCmds["obsidian"] = `command -v obsidian >/dev/null 2>&1 || [ -d /snap/obsidian ] || [ -d "/Applications/Obsidian.app" ]`
+	CheckCmds["obs-virtual-camera"] = `dpkg -l v4l2loopback-dkms 2>/dev/null | grep -q "^ii"`
+	CheckCmds["whatsapp-web"] = `command -v unofficial-whatsapp >/dev/null 2>&1 || [ -d /snap/unofficial-whatsapp ]`
+	CheckCmds["whatsapp"] = `[ -d "/Applications/WhatsApp.app" ]`
+	CheckCmds["font-fira-code-nerd-font"] = `[ -d "$HOME/.local/share/fonts/NerdFonts/FiraCode" ] || ls "$HOME/Library/Fonts"/*Fira*Code* >/dev/null 2>&1`
+	CheckCmds["font-cascadia-code-nerd-font"] = `[ -d "$HOME/.local/share/fonts/NerdFonts/CascadiaCode" ] || ls "$HOME/Library/Fonts"/*Cascadia* >/dev/null 2>&1`
+	CheckCmds["font-jetbrains-mono-nerd-font"] = `[ -d "$HOME/.local/share/fonts/NerdFonts/JetBrainsMono" ] || ls "$HOME/Library/Fonts"/*JetBrains* >/dev/null 2>&1`
+	CheckCmds["font-hack-nerd-font"] = `[ -d "$HOME/.local/share/fonts/NerdFonts/Hack" ] || ls "$HOME/Library/Fonts"/*Hack* >/dev/null 2>&1`
 }
 
 // DetectTool checks if the tool with the given key is installed.
@@ -73,8 +100,7 @@ func DetectTool(key string) (bool, string) {
 	if !ok {
 		return false, ""
 	}
-	// Shell-test form: [ -s $HOME/.nvm/nvm.sh ]
-	if strings.HasPrefix(cmd, "[") {
+	if shouldRunInShell(cmd) {
 		c := exec.Command("sh", "-c", cmd) //nolint:gosec
 		return c.Run() == nil, ""
 	}
@@ -86,4 +112,13 @@ func DetectTool(key string) (bool, string) {
 	}
 	version := strings.TrimSpace(strings.SplitN(string(out), "\n", 2)[0])
 	return true, version
+}
+
+func shouldRunInShell(cmd string) bool {
+	for _, token := range []string{"[", "||", "&&", "|", "$", "*", "\"", "'"} {
+		if strings.Contains(cmd, token) {
+			return true
+		}
+	}
+	return false
 }
